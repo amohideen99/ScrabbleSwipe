@@ -20,6 +20,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 public class Scrambler extends Fragment {
@@ -28,9 +31,8 @@ public class Scrambler extends Fragment {
     TextView out;
     TextView combos;
     EditText field;
-    //char[] letters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
-   // int[] points = {1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
     ProgressBar progressBar;
+    Trie trie;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -49,6 +51,28 @@ public class Scrambler extends Fragment {
         progressBar.setMax(235887);
         progressBar.setVisibility(View.GONE);
 
+
+        trie = new Trie();
+        String line = "";
+
+        try {
+            BufferedReader reader;
+
+            AssetManager assetManager = getActivity().getAssets();
+            InputStream stream;
+
+            stream = assetManager.open("web2.txt");
+            reader = new BufferedReader(new InputStreamReader(stream));
+
+            while ((line = reader.readLine()) != null) {
+
+                trie.addWord(line.replaceAll("[^A-Za-z]\\s+", ""));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        trie.serialize();
 
         field.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView v, int actionId,
@@ -73,19 +97,118 @@ public class Scrambler extends Fragment {
         return v;
     }
 
+    public static String toString(ArrayList<Word> words){
+
+        ArrayList<Word> copy = words;
+        ArrayList<Word> newWord = new ArrayList<>();
+
+        for(int i = 0; i < words.size(); i++){
+            newWord.add(words.get(getBiggestWord(copy)));
+            copy.remove(words.get(getBiggestWord(copy)));
+        }
+        String end = "";
+        for(int i = 0; i < newWord.size(); i++){
+            end += "\n" + newWord.get(i).getWord() + " " + newWord.get(i).getPoints();
+        }
+
+        return end;
+    }
+
+    public static int getBiggestWord(ArrayList<Word> words){
+
+        int biggest = words.get(0).getPoints();
+
+        for(int i = 0; i < words.size(); i++){
+
+            if(biggest < words.get(i).getPoints()){
+
+                biggest = words.get(i).getPoints();
+            }
+        }
+
+        for(int i = 0; i < words.size(); i++){
+
+            if(biggest == words.get(i).getPoints()){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public String[] permute(String s) {
+
+        if (s.length() == 1) {
+            return new String[]{s};
+        } else {
+            ArrayList<String> words = new ArrayList<>();
+            ArrayList<String> words2 = new ArrayList<>();
+
+            Collections.addAll(words, permute(s.substring(1)));
+
+            for (int i = 0; i < words.size(); i++) {
+
+                char temp = s.charAt(0);
+                char[] curr = words.get(i).toCharArray();
+
+                words2.add("" + temp + new String(curr));
+
+
+                for (int j = 0; j < words.get(i).length(); j++) {
+
+                    if(j > 0){
+                        curr[j-1] = temp;
+                    }
+                    temp = curr[j];
+                    curr[j] = s.charAt(0);
+                    words2.add("" + temp + new String(curr));
+
+                }
+            }
+
+            String[] toReturn = new String[words2.size()];
+            toReturn = words2.toArray(toReturn);
+
+            return toReturn;
+        }
+    }
+
 
     class LongOperation extends AsyncTask<String, Integer, String> {
 
         Integer count = 0;
+        SpellChecker spellChecker = new SpellChecker();
+        ArrayList<Word> words = new ArrayList();
+
 
         @Override
         protected String doInBackground(String... params) {
             //set Progress Bar Visible
 
-            char[] splitWord = params[0].toCharArray();
-            String combos = "";
-            Boolean curLine = true;
-            String line = "";
+            String[] allCombos = permute(params[0]);
+            List<String> results = new ArrayList<>();
+            for(int i = 0; i < allCombos.length; i++) {
+
+                results.addAll(trie.getWords(allCombos[i]));
+            }
+            for(int j = 0; j < results.size(); j++){
+
+                if(results.get(j).length() > params[0].length() + 1){
+
+                    results.remove(j);
+                }
+
+            }
+
+            for(int z = 0; z < results.size(); z++){
+
+                words.add(new Word(results.get(z), spellChecker.calcPoints(results.get(z))));
+            }
+
+
+
+
+
+            /*String line = "";
 
 
             try {
@@ -101,7 +224,7 @@ public class Scrambler extends Fragment {
                     count++;
                     publishProgress(count);
 
-                    line = line.replaceAll("\\s+", "");
+                    line = line.replaceAll("\\s+", "").toLowerCase();
 
                     if (line.length() <= splitWord.length + 1) {
 
@@ -112,7 +235,7 @@ public class Scrambler extends Fragment {
                         }
 
                         if (curLine) {
-                            combos += " " + line;
+                            words.add(new Word(line, spellChecker.calcPoints(line)));
                         }
                     }
                     curLine = true;
@@ -120,9 +243,9 @@ public class Scrambler extends Fragment {
 
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
 
-            return combos;
+            return Scrambler.toString(words);
         }
 
         @Override
@@ -145,4 +268,5 @@ public class Scrambler extends Fragment {
             progressBar.setProgress(values[0]);
         }
     }
+
 }

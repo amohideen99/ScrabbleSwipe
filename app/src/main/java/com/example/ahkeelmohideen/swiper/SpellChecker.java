@@ -20,11 +20,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 
+
 public class SpellChecker extends Fragment {
 
     View v;
     TextView textView;
     EditText editText;
+    Trie trie;
+
 
     char[] letters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
     int[] points = {1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10};
@@ -34,6 +37,26 @@ public class SpellChecker extends Fragment {
                              Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         v = inflater.inflate(R.layout.spell_checker, container, false);
+
+        trie = new Trie();
+        String line = "";
+
+        try {
+            BufferedReader reader;
+
+            AssetManager assetManager = getActivity().getAssets();
+            InputStream stream;
+
+            stream = assetManager.open("web2.txt");
+            reader = new BufferedReader(new InputStreamReader(stream));
+
+            while ((line = reader.readLine()) != null) {
+
+                trie.addWord(line.replaceAll("[^A-Za-z]\\s+", ""));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         textView = (TextView) v.findViewById(R.id.textview2);
         editText = (EditText) v.findViewById(R.id.editText);
@@ -47,15 +70,17 @@ public class SpellChecker extends Fragment {
                     final InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
 
+                    textView.setText("");
+
                     String enteredWord = editText.getText().toString().replaceAll("\\s+", "");
 
                     if (checkWord(enteredWord)) {
                         textView.setText("Points Worth: " + calcPoints(enteredWord));
-                        textView.setTextColor(Color.GREEN);
+                        textView.setTextColor(Color.parseColor("#e74c3c"));
 
                     } else {
                         textView.setText("Not a Word!");
-                        textView.setTextColor(Color.RED);
+                        textView.setTextColor(Color.parseColor("#3F51B5"));
                     }
 
 
@@ -71,7 +96,12 @@ public class SpellChecker extends Fragment {
 
     public boolean checkWord(String string) {
 
-        String line = "";
+
+        if(trie.getWords(string).size() != 0){
+            return true;
+        }
+        return false;
+        /*String line = "";
 
         try {
             BufferedReader reader;
@@ -90,13 +120,13 @@ public class SpellChecker extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return false;
+        return false;*/
 
     }
 
     public int calcPoints(String string) {
 
-        char[] word = string.toCharArray();
+        char[] word = string.toLowerCase().toCharArray();
         int score = 0;
 
         for (int i = 0; i < word.length; i++) {
