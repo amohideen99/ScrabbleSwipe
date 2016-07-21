@@ -40,7 +40,7 @@ public class Trie implements java.io.Serializable {
      * @return a List containing String objects containing the words in
      * the Trie with the given prefix.
      */
-    public List getWords(String prefix) {
+   /* public List getWords(String prefix) {
         //Find the node which represents the last letter of the prefix
         TrieNode lastNode = root;
         for (int i = 0; i < prefix.length(); i++) {
@@ -52,7 +52,7 @@ public class Trie implements java.io.Serializable {
 
         //Return the words which eminate from the last node
         return lastNode.getWords();
-    }
+    }*/
 
     public void serialize() {
 

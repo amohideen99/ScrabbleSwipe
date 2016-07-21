@@ -1,15 +1,22 @@
-package com.example.ahkeelmohideen.swiper;
+package com.example.ahkeelmohideen.swiper; /**
+ * Created by ahkeelmohideen on 7/10/16.
+ */
+
 
 /**
  * Created by ahkeelmohideen on 7/10/16.
  */
 
-import android.util.Log;
 
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrieNode {
+public class TrieNode implements java.io.Serializable{
     private TrieNode parent;
     private TrieNode[] children;
     private boolean isLeaf;     //Quick way to check if any children exist
@@ -41,8 +48,10 @@ public class TrieNode {
      * @param word the word to add
      */
     protected void addWord(String word) {
+
+        word = word.toLowerCase();
         isLeaf = false;
-        Log.v("Word: ",word);
+        System.out.println("Word: " + word);
         int charPos = word.charAt(0) - 'a';
 
         if (children[charPos] == null) {
@@ -55,6 +64,32 @@ public class TrieNode {
         } else {
             children[charPos].isWord = true;
         }
+    }
+
+    //public void addWord(String word, TrieNode root) {
+    //     root.addWord(word.toLowerCase());
+    //  }
+
+    /**
+     * Get the words in the Trie with the given
+     * prefix
+     *
+     * @param prefix
+     * @return a List containing String objects containing the words in
+     * the Trie with the given prefix.
+     */
+    public List getWords(String prefix, TrieNode root) {
+        //Find the node which represents the last letter of the prefix
+        TrieNode lastNode = root;
+        for (int i = 0; i < prefix.length(); i++) {
+            lastNode = lastNode.getNode(prefix.charAt(i));
+
+            //If no node matches, then no words exist, return empty list
+            if (lastNode == null) return new ArrayList();
+        }
+
+        //Return the words which eminate from the last node
+        return lastNode.getWords();
     }
 
     /**
@@ -129,6 +164,20 @@ public class TrieNode {
 
             return parent.toString() + new String(new char[]{character});
 
+        }
+    }
+
+    public void Serialize(TrieNode root){
+
+        try {
+// Serialize data object to a file
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("Tree.ser"));
+            out.writeObject(root);
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

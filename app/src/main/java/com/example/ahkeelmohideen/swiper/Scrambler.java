@@ -1,11 +1,14 @@
 package com.example.ahkeelmohideen.swiper;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,9 +20,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +39,7 @@ public class Scrambler extends Fragment {
     TextView combos;
     EditText field;
     ProgressBar progressBar;
-    Trie trie;
+    TrieNode trieNode = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -41,7 +48,23 @@ public class Scrambler extends Fragment {
 
         v = inflater.inflate(R.layout.scrambler, container, false);
 
+        try {
 
+            CustomInputStream decompressible = null;
+            InputStream is = null;
+            //ObjectInputStream ois=null;
+            AssetManager assets = getContext().getAssets();
+            is = assets.open("Tree.ser");
+            decompressible = new CustomInputStream(is);
+            decompressible.readClassDescriptor();
+            //ois = new ObjectInputStream(is);
+            trieNode = (TrieNode) decompressible.readObject();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
 
         field = (EditText) v.findViewById(R.id.editText);
@@ -52,8 +75,32 @@ public class Scrambler extends Fragment {
         progressBar.setVisibility(View.GONE);
 
 
-        trie = new Trie();
-        String line = "";
+        /*try {
+
+           /* AssetManager assetManager = getActivity().getAssets();
+            //AssetFileDescriptor afd = assetManager.openFd("Tree.ser");
+
+            FileInputStream fis = new FileInputStream(new File(assetManager.open("Tree.ser")));
+            ObjectInputStream in = new ObjectInputStream(fis);
+            trieNode = (TrieNode) in.readObject();
+            in.close();
+            fis.close();
+            Log.v("Next WOrd Test: ", "" + trieNode.getWords("hello", trieNode).get(0));
+
+            Resources res = getResources();
+            InputStream is = res.openRawResource(R.raw.tree);
+            ObjectInputStream ois =new ObjectInputStream(is);
+            //Blueprint is my custom object
+            trieNode = (TrieNode) ois.readObject();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }*/
+        /*String line = "";
 
         try {
             BufferedReader reader;
@@ -72,7 +119,7 @@ public class Scrambler extends Fragment {
             e.printStackTrace();
         }
 
-        trie.serialize();
+        trie.serialize();*/
 
         field.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView v, int actionId,
@@ -188,7 +235,7 @@ public class Scrambler extends Fragment {
             List<String> results = new ArrayList<>();
             for(int i = 0; i < allCombos.length; i++) {
 
-                results.addAll(trie.getWords(allCombos[i]));
+                results.addAll(trieNode.getWords(allCombos[i], trieNode));
             }
             for(int j = 0; j < results.size(); j++){
 

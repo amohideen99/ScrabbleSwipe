@@ -3,6 +3,7 @@ package com.example.ahkeelmohideen.swiper;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Color;
+import android.graphics.Region;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
@@ -15,10 +16,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.io.ObjectInputStream;
 
 
 public class SpellChecker extends Fragment {
@@ -26,7 +28,8 @@ public class SpellChecker extends Fragment {
     View v;
     TextView textView;
     EditText editText;
-    Trie trie;
+    TrieNode trie;
+    TrieNode newTrie;
 
 
     char[] letters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
@@ -38,10 +41,10 @@ public class SpellChecker extends Fragment {
         // TODO Auto-generated method stub
         v = inflater.inflate(R.layout.spell_checker, container, false);
 
-        trie = new Trie();
+       /* trie = new TrieNode();
         String line = "";
 
-        try {
+       try {
             BufferedReader reader;
 
             AssetManager assetManager = getActivity().getAssets();
@@ -57,6 +60,23 @@ public class SpellChecker extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        trie.Serialize(trie, this.getContext());*/
+
+      /*  try {
+            FileInputStream fis = getContext().openFileInput("Tree.ser");
+            ObjectInputStream is = new ObjectInputStream(fis);
+            Object readObject = is.readObject();
+            is.close();
+            newTrie =(TrieNode) readObject;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+*/
+
 
         textView = (TextView) v.findViewById(R.id.textview2);
         editText = (EditText) v.findViewById(R.id.editText);
@@ -97,7 +117,7 @@ public class SpellChecker extends Fragment {
     public boolean checkWord(String string) {
 
 
-        if(trie.getWords(string).size() != 0){
+        if(newTrie.getWords(string, newTrie).size() != 0){
             return true;
         }
         return false;
