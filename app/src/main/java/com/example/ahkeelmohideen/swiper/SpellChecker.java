@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Region;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +17,16 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
+import java.io.StreamCorruptedException;
 
 
 public class SpellChecker extends Fragment {
@@ -41,44 +47,8 @@ public class SpellChecker extends Fragment {
         // TODO Auto-generated method stub
         v = inflater.inflate(R.layout.spell_checker, container, false);
 
-       /* trie = new TrieNode();
-        String line = "";
-
-       try {
-            BufferedReader reader;
-
-            AssetManager assetManager = getActivity().getAssets();
-            InputStream stream;
-
-            stream = assetManager.open("web2.txt");
-            reader = new BufferedReader(new InputStreamReader(stream));
-
-            while ((line = reader.readLine()) != null) {
-
-                trie.addWord(line.replaceAll("[^A-Za-z]\\s+", ""));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        trie.Serialize(trie, this.getContext());*/
-
-      /*  try {
-            FileInputStream fis = getContext().openFileInput("Tree.ser");
-            ObjectInputStream is = new ObjectInputStream(fis);
-            Object readObject = is.readObject();
-            is.close();
-            newTrie =(TrieNode) readObject;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-*/
-
-
         textView = (TextView) v.findViewById(R.id.textview2);
+
         editText = (EditText) v.findViewById(R.id.editText);
 
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -110,14 +80,14 @@ public class SpellChecker extends Fragment {
             }
         });
 
-
         return v;
     }
+
 
     public boolean checkWord(String string) {
 
 
-        if(newTrie.getWords(string, newTrie).size() != 0){
+        if (trie.getWords(string, trie).size() != 0) {
             return true;
         }
         return false;
@@ -143,6 +113,7 @@ public class SpellChecker extends Fragment {
         return false;*/
 
     }
+
 
     public int calcPoints(String string) {
 

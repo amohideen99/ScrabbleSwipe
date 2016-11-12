@@ -9,8 +9,12 @@ package com.example.ahkeelmohideen.swiper; /**
 
 
 
+import android.content.Context;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -167,11 +171,10 @@ public class TrieNode implements java.io.Serializable{
         }
     }
 
-    public void Serialize(TrieNode root){
+    public void Serialize(TrieNode root, Context context){
 
         try {
-// Serialize data object to a file
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("Tree.ser"));
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(context.getFilesDir(),"")+File.separator+"tree.ser"));
             out.writeObject(root);
             out.close();
         } catch (FileNotFoundException e) {

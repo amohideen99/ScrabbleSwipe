@@ -19,14 +19,17 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,8 +41,9 @@ public class Scrambler extends Fragment {
     TextView out;
     TextView combos;
     EditText field;
-    ProgressBar progressBar;
-    TrieNode trieNode = null;
+    TrieNode trie;
+    TrieNode tempTrie;
+    int progressInt = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -48,78 +52,16 @@ public class Scrambler extends Fragment {
 
         v = inflater.inflate(R.layout.scrambler, container, false);
 
-        try {
-
-            CustomInputStream decompressible = null;
-            InputStream is = null;
-            //ObjectInputStream ois=null;
-            AssetManager assets = getContext().getAssets();
-            is = assets.open("Tree.ser");
-            decompressible = new CustomInputStream(is);
-            decompressible.readClassDescriptor();
-            //ois = new ObjectInputStream(is);
-            trieNode = (TrieNode) decompressible.readObject();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
+        new InstantiateTree().execute();
 
         field = (EditText) v.findViewById(R.id.editText);
-        out = (TextView) v.findViewById(R.id.textview2);
         combos = (TextView) v.findViewById(R.id.combos);
-        progressBar = (ProgressBar) v.findViewById(R.id.progressBar);
-        progressBar.setMax(235887);
-        progressBar.setVisibility(View.GONE);
 
+        if(new File(new File(this.getContext().getFilesDir(), "") + File.separator + "tree.ser") == null){
 
-        /*try {
-
-           /* AssetManager assetManager = getActivity().getAssets();
-            //AssetFileDescriptor afd = assetManager.openFd("Tree.ser");
-
-            FileInputStream fis = new FileInputStream(new File(assetManager.open("Tree.ser")));
-            ObjectInputStream in = new ObjectInputStream(fis);
-            trieNode = (TrieNode) in.readObject();
-            in.close();
-            fis.close();
-            Log.v("Next WOrd Test: ", "" + trieNode.getWords("hello", trieNode).get(0));
-
-            Resources res = getResources();
-            InputStream is = res.openRawResource(R.raw.tree);
-            ObjectInputStream ois =new ObjectInputStream(is);
-            //Blueprint is my custom object
-            trieNode = (TrieNode) ois.readObject();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }*/
-        /*String line = "";
-
-        try {
-            BufferedReader reader;
-
-            AssetManager assetManager = getActivity().getAssets();
-            InputStream stream;
-
-            stream = assetManager.open("web2.txt");
-            reader = new BufferedReader(new InputStreamReader(stream));
-
-            while ((line = reader.readLine()) != null) {
-
-                trie.addWord(line.replaceAll("[^A-Za-z]\\s+", ""));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+            createTree();
         }
 
-        trie.serialize();*/
 
         field.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView v, int actionId,
@@ -129,7 +71,6 @@ public class Scrambler extends Fragment {
                     final InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
 
-                    progressBar.setVisibility(View.VISIBLE);
 
                     String enteredWord = field.getText().toString().replaceAll("\\s+", "");
 
@@ -219,6 +160,56 @@ public class Scrambler extends Fragment {
         }
     }
 
+    public void createTree(){
+
+        tempTrie = new TrieNode();
+        String line = "";
+
+        try {
+            BufferedReader reader;
+
+            AssetManager assetManager = getActivity().getAssets();
+            InputStream stream;
+
+            stream = assetManager.open("web2.txt");
+            reader = new BufferedReader(new InputStreamReader(stream));
+
+            while ((line = reader.readLine()) != null) {
+
+                progressInt++;
+                tempTrie.addWord(line.replaceAll("[^A-Za-z]\\s+", ""));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        tempTrie.Serialize(tempTrie, this.getContext());
+    }
+
+    public TrieNode readInTree() {
+
+        TrieNode trieNode;
+        try {
+            FileInputStream input = new FileInputStream(new File(new File(this.getContext().getFilesDir(), "") + File.separator + "tree.ser"));
+            InputStream buffer = new BufferedInputStream(input);
+            ObjectInputStream stream = new ObjectInputStream(buffer);
+            trieNode = (TrieNode) stream.readObject();
+            Log.v("serialization", "Completed");
+            input.close();
+            return trieNode;
+        } catch (StreamCorruptedException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
 
     class LongOperation extends AsyncTask<String, Integer, String> {
 
@@ -235,7 +226,7 @@ public class Scrambler extends Fragment {
             List<String> results = new ArrayList<>();
             for(int i = 0; i < allCombos.length; i++) {
 
-                results.addAll(trieNode.getWords(allCombos[i], trieNode));
+                results.addAll(trie.getWords(allCombos[i], trie));
             }
             for(int j = 0; j < results.size(); j++){
 
@@ -251,54 +242,12 @@ public class Scrambler extends Fragment {
                 words.add(new Word(results.get(z), spellChecker.calcPoints(results.get(z))));
             }
 
-
-
-
-
-            /*String line = "";
-
-
-            try {
-                BufferedReader reader;
-                AssetManager assetManager = getActivity().getAssets();
-                InputStream stream;
-
-                stream = assetManager.open("web2.txt");
-                reader = new BufferedReader(new InputStreamReader(stream));
-
-                while ((line = reader.readLine()) != null) {
-
-                    count++;
-                    publishProgress(count);
-
-                    line = line.replaceAll("\\s+", "").toLowerCase();
-
-                    if (line.length() <= splitWord.length + 1) {
-
-                        for (int i = 0; i < splitWord.length; i++) {
-
-                            if (!line.contains("" + splitWord[i]))
-                                curLine = false;
-                        }
-
-                        if (curLine) {
-                            words.add(new Word(line, spellChecker.calcPoints(line)));
-                        }
-                    }
-                    curLine = true;
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
-
             return Scrambler.toString(words);
         }
 
         @Override
         protected void onPostExecute(String result) {
             TextView txt = (TextView) v.findViewById(R.id.combos);
-            progressBar.setVisibility(View.GONE);
             txt.setText(result);
 
         }
@@ -306,14 +255,37 @@ public class Scrambler extends Fragment {
         @Override
         protected void onPreExecute() {
 
-            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
 
-            progressBar.setProgress(values[0]);
         }
     }
 
+    class InstantiateTree extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            //set Progress Bar Visible
+
+           trie = readInTree();
+            return "Complete";
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+        }
+
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+
+        }
+    }
 }

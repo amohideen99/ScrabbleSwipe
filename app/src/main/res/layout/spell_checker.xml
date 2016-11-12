@@ -49,7 +49,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/editText"
         android:layout_centerHorizontal="true"
-        android:text=""
+        android:text="Loading..."
         android:textColor="#e74c3c"
         android:textSize="42dp" />
 
