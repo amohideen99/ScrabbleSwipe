@@ -11,6 +11,8 @@ public class MainActivity extends FragmentActivity {//implements ActionBar.TabLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         setContentView(R.layout.activity_main);
         viewpager = (ViewPager) findViewById(R.id.pager);
         ft = new FragmentPageAdapter(getSupportFragmentManager());

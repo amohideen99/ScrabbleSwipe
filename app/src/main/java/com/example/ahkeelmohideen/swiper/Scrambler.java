@@ -45,6 +45,7 @@ public class Scrambler extends Fragment {
     TrieNode tempTrie;
     int progressInt = 0;
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -52,15 +53,19 @@ public class Scrambler extends Fragment {
 
         v = inflater.inflate(R.layout.scrambler, container, false);
 
-        new InstantiateTree().execute();
+        //  new InstantiateTree().execute();
 
         field = (EditText) v.findViewById(R.id.editText);
         combos = (TextView) v.findViewById(R.id.combos);
 
-        if(new File(new File(this.getContext().getFilesDir(), "") + File.separator + "tree.ser") == null){
+        File file = new File(new File(this.getContext().getFilesDir(), "") + File.separator + "tree.ser");
 
-            createTree();
-        }
+        if (!file.exists()) {
+
+            trie = createTree();
+
+        } else
+            trie = readInTree();
 
 
         field.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -85,38 +90,38 @@ public class Scrambler extends Fragment {
         return v;
     }
 
-    public static String toString(ArrayList<Word> words){
+    public static String toString(ArrayList<Word> words) {
 
         ArrayList<Word> copy = words;
         ArrayList<Word> newWord = new ArrayList<>();
 
-        for(int i = 0; i < words.size(); i++){
+        for (int i = 0; i < words.size(); i++) {
             newWord.add(words.get(getBiggestWord(copy)));
             copy.remove(words.get(getBiggestWord(copy)));
         }
         String end = "";
-        for(int i = 0; i < newWord.size(); i++){
+        for (int i = 0; i < newWord.size(); i++) {
             end += "\n" + newWord.get(i).getWord() + " " + newWord.get(i).getPoints();
         }
 
         return end;
     }
 
-    public static int getBiggestWord(ArrayList<Word> words){
+    public static int getBiggestWord(ArrayList<Word> words) {
 
         int biggest = words.get(0).getPoints();
 
-        for(int i = 0; i < words.size(); i++){
+        for (int i = 0; i < words.size(); i++) {
 
-            if(biggest < words.get(i).getPoints()){
+            if (biggest < words.get(i).getPoints()) {
 
                 biggest = words.get(i).getPoints();
             }
         }
 
-        for(int i = 0; i < words.size(); i++){
+        for (int i = 0; i < words.size(); i++) {
 
-            if(biggest == words.get(i).getPoints()){
+            if (biggest == words.get(i).getPoints()) {
                 return i;
             }
         }
@@ -143,8 +148,8 @@ public class Scrambler extends Fragment {
 
                 for (int j = 0; j < words.get(i).length(); j++) {
 
-                    if(j > 0){
-                        curr[j-1] = temp;
+                    if (j > 0) {
+                        curr[j - 1] = temp;
                     }
                     temp = curr[j];
                     curr[j] = s.charAt(0);
@@ -160,7 +165,7 @@ public class Scrambler extends Fragment {
         }
     }
 
-    public void createTree(){
+    public TrieNode createTree() {
 
         tempTrie = new TrieNode();
         String line = "";
@@ -184,6 +189,8 @@ public class Scrambler extends Fragment {
         }
 
         tempTrie.Serialize(tempTrie, this.getContext());
+
+        return tempTrie;
     }
 
     public TrieNode readInTree() {
@@ -224,20 +231,20 @@ public class Scrambler extends Fragment {
 
             String[] allCombos = permute(params[0]);
             List<String> results = new ArrayList<>();
-            for(int i = 0; i < allCombos.length; i++) {
+            for (int i = 0; i < allCombos.length; i++) {
 
                 results.addAll(trie.getWords(allCombos[i], trie));
             }
-            for(int j = 0; j < results.size(); j++){
+            for (int j = 0; j < results.size(); j++) {
 
-                if(results.get(j).length() > params[0].length() + 1){
+                if (results.get(j).length() > params[0].length() + 1) {
 
                     results.remove(j);
                 }
 
             }
 
-            for(int z = 0; z < results.size(); z++){
+            for (int z = 0; z < results.size(); z++) {
 
                 words.add(new Word(results.get(z), spellChecker.calcPoints(results.get(z))));
             }
@@ -263,7 +270,7 @@ public class Scrambler extends Fragment {
         }
     }
 
-    class InstantiateTree extends AsyncTask<String, Integer, String> {
+    /*class InstantiateTree extends AsyncTask<String, Integer, String> {
 
         @Override
         protected String doInBackground(String... params) {
@@ -287,5 +294,5 @@ public class Scrambler extends Fragment {
         protected void onProgressUpdate(Integer... values) {
 
         }
-    }
+    }*/
 }
