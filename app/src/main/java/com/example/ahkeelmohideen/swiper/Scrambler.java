@@ -60,12 +60,12 @@ public class Scrambler extends Fragment {
 
         File file = new File(new File(this.getContext().getFilesDir(), "") + File.separator + "tree.ser");
 
-        if (!file.exists()) {
+        if (!file.exists()) {                                           //verify tree.ser
 
-            trie = createTree();
+            trie = createTree();                                        //doesnt exist create
 
         } else
-            trie = readInTree();
+            trie = readInTree();                                        //does so deserialize
 
 
         field.setOnEditorActionListener(new TextView.OnEditorActionListener() {
